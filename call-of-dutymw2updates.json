@@ -1,0 +1,93 @@
+[
+    {
+        "UpdateStageName": "Userraw Directory Creation",
+        "UpdateSourcePlatform": "All",
+        "UpdateSource": "CreateDirectory",
+        "UpdateSourceArgs": "{{$FullBaseDir}}userraw",
+        "SkipOnFailure": false
+    },
+    {
+        "UpdateStageName": "Mods Directory Creation",
+        "UpdateSourcePlatform": "All",
+        "UpdateSource": "CreateDirectory",
+        "UpdateSourceArgs": "{{$FullBaseDir}}mods"
+    },
+    {
+        "UpdateStageName": "SteamCMD Game Download",
+        "UpdateSourcePlatform": "All",
+        "UpdateSource": "SteamCMD",
+        "UpdateSourceData": "10190",
+        "UpdateSourceArgs": "10190",
+        "ForceDownloadPlatform": "Windows",
+        "SkipOnFailure": false
+    },
+    {
+        "UpdateStageName": "AlterWare Launcher Download (dynamic latest release)",
+        "UpdateSourcePlatform": "Windows",
+        "UpdateSource": "Executable",
+        "UpdateSourceData": "powershell.exe",
+        "UpdateSourceArgs": "-NoProfile -Command \"$ErrorActionPreference='Stop'; $rel = Invoke-RestMethod -UseBasicParsing 'https://api.github.com/repos/iw4x/launcher/releases/latest'; $asset = $rel.assets | Where-Object { $_.name -like '*windows*' -and $_.name -notlike '*release-tool*' } | Select-Object -First 1; Invoke-WebRequest -UseBasicParsing -Uri $asset.browser_download_url -OutFile '{{$FullBaseDir}}launcher.zip'; Expand-Archive -Path '{{$FullBaseDir}}launcher.zip' -DestinationPath '{{$FullBaseDir}}' -Force; Remove-Item '{{$FullBaseDir}}launcher.zip'\"",
+        "SkipOnFailure": false
+    },
+    {
+        "UpdateStageName": "AlterWare Launcher Download (dynamic latest release)",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "Executable",
+        "UpdateSourceData": "/bin/bash",
+        "UpdateSourceArgs": "-c \"set -e; API='https://api.github.com/repos/iw4x/launcher/releases/latest'; URL=$(curl -s \\\"$API\\\" | grep -oE '\\\"browser_download_url\\\": *\\\"[^\\\"]*linux[^\\\"]*\\\"' | grep -vi release-tool | head -1 | sed -E 's/.*\\\"(https:[^\\\"]+)\\\"/\\\\1/'); if [ -z \\\"$URL\\\" ]; then echo 'Could not resolve latest AlterWare launcher asset URL' >&2; exit 1; fi; curl -sL -o '{{$FullBaseDir}}launcher.tar.xz' \\\"$URL\\\"; tar -xf '{{$FullBaseDir}}launcher.tar.xz' -C '{{$FullBaseDir}}'; rm -f '{{$FullBaseDir}}launcher.tar.xz'\"",
+        "SkipOnFailure": false
+    },
+    {
+        "UpdateStageName": "Client Installation",
+        "UpdateSourcePlatform": "Windows",
+        "UpdateSource": "Executable",
+        "UpdateSourceData": "powershell.exe",
+        "UpdateSourceArgs": "-NoProfile -Command \"Set-Location -Path '{{$FullBaseDir}}'; & ./iw4x-launcher.exe --update --skip-self-update --force --path=\\\"{{$FullBaseDir}}\\\"\"",
+        "SkipOnFailure": false
+    },
+    {
+        "UpdateStageName": "Client Installation",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "Executable",
+        "UpdateSourceData": "/bin/bash",
+        "UpdateSourceArgs": "-c \"cd ./call-of-dutymw2/10190 && chmod +x iw4x-launcher && ./iw4x-launcher --update --skip-self-update --force --path=\\\"{{$FullBaseDir}}\\\"\"",
+        "SkipOnFailure": false
+    },
+    {
+        "UpdateStageName": "Config File Download",
+        "UpdateSourcePlatform": "All",
+        "UpdateSource": "FetchURL",
+        "UpdateSourceData": "https://raw.githubusercontent.com/spreadkiller/AMPTemplates-custom/main/call-of-dutymw2server.cfg",
+        "UpdateSourceArgs": "server.cfg",
+        "UpdateSourceTarget": "{{$FullBaseDir}}userraw",
+        "OverwriteExistingFiles": false,
+        "SkipOnFailure": false
+    },
+    {
+        "UpdateStageName": "GunGame Mod Install",
+        "UpdateSourcePlatform": "All",
+        "UpdateSource": "FetchURL",
+        "UpdateSourceData": "https://raw.githubusercontent.com/spreadkiller/AMPTemplates-custom/main/gungame-mod.zip",
+        "UpdateSourceTarget": "{{$FullBaseDir}}mods",
+        "UnzipUpdateSource": true,
+        "OverwriteExistingFiles": true,
+        "DeleteAfterExtract": true,
+        "SkipOnFailure": true
+    },
+    {
+        "UpdateStageName": "Initialise Wine",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "Executable",
+        "UpdateSourceData": "/bin/bash",
+        "UpdateSourceArgs": "-c \"rm -rf \\\"{{$FullRootDir}}.wine\\\" >/dev/null 2>&1; WINEPREFIX=\\\"{{$FullRootDir}}.wine\\\" WINEARCH=win32 WINEDEBUG=-all /usr/bin/wineboot --init\"",
+        "SkipOnFailure": false
+    },
+    {
+        "UpdateStageName": "Disable Prefix Sound",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "Executable",
+        "UpdateSourceData": "/bin/bash",
+        "UpdateSourceArgs": "-c \"cd call-of-dutymw2 && [[ -f winetricks ]] && rm -f winetricks; wget -q https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && chmod +x winetricks; export WINEPREFIX=\\\"{{$FullRootDir}}.wine\\\"; export WINEARCH=win32; ./winetricks sound=disabled > winescript_log.txt 2>&1\"",
+        "SkipOnFailure": true
+    }
+]
