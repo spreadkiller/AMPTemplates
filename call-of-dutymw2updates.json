@@ -22,6 +22,24 @@
         "SkipOnFailure": false
     },
     {
+        "UpdateStageName": "AlterWare Launcher Resolver Script Download",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "FetchURL",
+        "UpdateSourceData": "https://raw.githubusercontent.com/spreadkiller/AMPTemplates-custom/main/resolve-launcher.sh",
+        "UpdateSourceArgs": "resolve-launcher.sh",
+        "UpdateSourceTarget": "{{$FullBaseDir}}",
+        "OverwriteExistingFiles": true,
+        "SkipOnFailure": false
+    },
+    {
+        "UpdateStageName": "AlterWare Launcher Download (dynamic latest release)",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "Executable",
+        "UpdateSourceData": "/bin/bash",
+        "UpdateSourceArgs": "{{$FullBaseDir}}resolve-launcher.sh {{$FullBaseDir}}",
+        "SkipOnFailure": false
+    },
+    {
         "UpdateStageName": "AlterWare Launcher Download (dynamic latest release)",
         "UpdateSourcePlatform": "Windows",
         "UpdateSource": "Executable",
@@ -30,27 +48,21 @@
         "SkipOnFailure": false
     },
     {
-        "UpdateStageName": "AlterWare Launcher Download (dynamic latest release)",
-        "UpdateSourcePlatform": "Linux",
-        "UpdateSource": "Executable",
-        "UpdateSourceData": "/bin/bash",
-        "UpdateSourceArgs": "-c \"set -e; API='https://api.github.com/repos/iw4x/launcher/releases/latest'; URL=$(curl -s \\\"$API\\\" | grep -oE '\\\"browser_download_url\\\": *\\\"[^\\\"]*linux[^\\\"]*\\\"' | grep -vi release-tool | head -1 | sed -E 's/.*\\\"(https:[^\\\"]+)\\\"/\\\\1/'); if [ -z \\\"$URL\\\" ]; then echo 'Could not resolve latest AlterWare launcher asset URL' >&2; exit 1; fi; curl -sL -o '{{$FullBaseDir}}launcher.tar.xz' \\\"$URL\\\"; tar -xf '{{$FullBaseDir}}launcher.tar.xz' -C '{{$FullBaseDir}}'; rm -f '{{$FullBaseDir}}launcher.tar.xz'\"",
-        "SkipOnFailure": false
-    },
-    {
         "UpdateStageName": "Client Installation",
+        "UpdateStageDescription": "Updates the client using the launcher's current CLI flags (--update/--force/--path are no longer valid options upstream)",
         "UpdateSourcePlatform": "Windows",
         "UpdateSource": "Executable",
         "UpdateSourceData": "powershell.exe",
-        "UpdateSourceArgs": "-NoProfile -Command \"Set-Location -Path '{{$FullBaseDir}}'; & ./iw4x-launcher.exe --update --skip-self-update --force --path=\\\"{{$FullBaseDir}}\\\"\"",
+        "UpdateSourceArgs": "-NoProfile -Command \"Set-Location -Path '{{$FullBaseDir}}'; & ./iw4x-launcher.exe --no-self-update --skip-launch\"",
         "SkipOnFailure": false
     },
     {
         "UpdateStageName": "Client Installation",
+        "UpdateStageDescription": "Updates the client using the launcher's current CLI flags (--update/--force/--path are no longer valid options upstream)",
         "UpdateSourcePlatform": "Linux",
         "UpdateSource": "Executable",
         "UpdateSourceData": "/bin/bash",
-        "UpdateSourceArgs": "-c \"cd ./call-of-dutymw2/10190 && chmod +x iw4x-launcher && ./iw4x-launcher --update --skip-self-update --force --path=\\\"{{$FullBaseDir}}\\\"\"",
+        "UpdateSourceArgs": "-c \"cd ./call-of-dutymw2/10190 && chmod +x iw4x-launcher && ./iw4x-launcher --no-self-update --skip-launch\"",
         "SkipOnFailure": false
     },
     {
@@ -76,10 +88,11 @@
     },
     {
         "UpdateStageName": "Initialise Wine",
+        "UpdateStageDescription": "win64 prefix, not win32 -- Steam now ships a 64-bit iw4mp.exe for app 10190, and a win32-only prefix cannot load any 64-bit binary at all (a win64 prefix supports both 32- and 64-bit)",
         "UpdateSourcePlatform": "Linux",
         "UpdateSource": "Executable",
         "UpdateSourceData": "/bin/bash",
-        "UpdateSourceArgs": "-c \"rm -rf \\\"{{$FullRootDir}}.wine\\\" >/dev/null 2>&1; WINEPREFIX=\\\"{{$FullRootDir}}.wine\\\" WINEARCH=win32 WINEDEBUG=-all /usr/bin/wineboot --init\"",
+        "UpdateSourceArgs": "-c \"rm -rf \\\"{{$FullRootDir}}.wine\\\" >/dev/null 2>&1; WINEPREFIX=\\\"{{$FullRootDir}}.wine\\\" WINEARCH=win64 WINEDEBUG=-all XDG_RUNTIME_DIR=/tmp /usr/bin/wineboot --init\"",
         "SkipOnFailure": false
     },
     {
@@ -87,7 +100,7 @@
         "UpdateSourcePlatform": "Linux",
         "UpdateSource": "Executable",
         "UpdateSourceData": "/bin/bash",
-        "UpdateSourceArgs": "-c \"cd call-of-dutymw2 && [[ -f winetricks ]] && rm -f winetricks; wget -q https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && chmod +x winetricks; export WINEPREFIX=\\\"{{$FullRootDir}}.wine\\\"; export WINEARCH=win32; ./winetricks sound=disabled > winescript_log.txt 2>&1\"",
+        "UpdateSourceArgs": "-c \"cd call-of-dutymw2 && [[ -f winetricks ]] && rm -f winetricks; wget -q https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && chmod +x winetricks; export WINEPREFIX=\\\"{{$FullRootDir}}.wine\\\"; export WINEARCH=win64; export XDG_RUNTIME_DIR=/tmp; ./winetricks sound=disabled > winescript_log.txt 2>&1\"",
         "SkipOnFailure": true
     }
 ]
