@@ -88,11 +88,11 @@
     },
     {
         "UpdateStageName": "Initialise Wine",
-        "UpdateStageDescription": "win64 prefix, not win32 -- Steam now ships a 64-bit iw4mp.exe for app 10190, and a win32-only prefix cannot load any 64-bit binary at all (a win64 prefix supports both 32- and 64-bit)",
+        "UpdateStageDescription": "win64 prefix, not win32 -- Steam now ships a 64-bit iw4mp.exe for app 10190, and a win32-only prefix cannot load any 64-bit binary at all (a win64 prefix supports both 32- and 64-bit). Only rebuilds the prefix if it's missing/unhealthy (no system.reg), instead of unconditionally on every update -- a full rebuild forces a cold Wine prefix + cold OS file cache on the next start, which took ~5-6 minutes end to end versus ~7 seconds for a warm prefix.",
         "UpdateSourcePlatform": "Linux",
         "UpdateSource": "Executable",
         "UpdateSourceData": "/bin/bash",
-        "UpdateSourceArgs": "-c \"rm -rf \\\"{{$FullRootDir}}.wine\\\" >/dev/null 2>&1; WINEPREFIX=\\\"{{$FullRootDir}}.wine\\\" WINEARCH=win64 WINEDEBUG=-all XDG_RUNTIME_DIR=/tmp /usr/bin/wineboot --init\"",
+        "UpdateSourceArgs": "-c \"PREFIX=\\\"{{$FullRootDir}}.wine\\\"; if [ ! -f \\\"$PREFIX/system.reg\\\" ]; then rm -rf \\\"$PREFIX\\\" >/dev/null 2>&1; WINEPREFIX=\\\"$PREFIX\\\" WINEARCH=win64 WINEDEBUG=-all XDG_RUNTIME_DIR=/tmp /usr/bin/wineboot --init; else echo \\\"Wine prefix already initialised, skipping rebuild\\\"; fi\"",
         "SkipOnFailure": false
     },
     {
